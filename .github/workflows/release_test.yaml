@@ -1,13 +1,24 @@
 name: Publish Release
-on: [push]
+on: 
+  push:
+    tags:
+      - 'v*'
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Create a Release
-      uses: elgohr/Github-Release-Action@master
+    - name: Create changelogs
+      id: changelogs
+      uses: heineiuo/create-changelogs@master
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@latest
       env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        args: MyReleaseMessage
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        body: ${{ steps.changelogs.outputs.changelogs }}
+        draft: false
+        prerelease: ${{ steps.changelogs.outputs.release_type == 'prerelease' }}
